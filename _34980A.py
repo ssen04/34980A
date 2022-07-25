@@ -19,6 +19,8 @@ class _34980A:
     def get_voltage(self):
         # Configure the range, resolution and channel for voltage measurement
         self.v34980A.write(':CONFigure:SCALar:VOLTage:DC %G,%G,(%s)' % (100.0, 6.5, '@1001'))
+        # Configure number of NPL cycles
+        self.v34980A.write(':SENSe:VOLTage:DC:NPLCycles %G,(%s)' % (10.0, '@1001'))
         temp_values = self.v34980A.query_ascii_values(':MEASure:SCALar:VOLTage:DC? (%s)' % ('@1001'))  # channel 1 in slot 1
         dcVoltage = temp_values[0]
         return dcVoltage
@@ -32,6 +34,8 @@ class _34980A:
     def get_resistance(self):
         # Configure the range, resolution and channel for resistance measurement
         self.v34980A.write(':CONFigure:SCALar:RESistance %G,%G,(%s)' % (100.0, 6.5, '@1001'))
+        # Configure number of NPL cycles
+        self.v34980A.write(':SENSe:RESistance:NPLCycles %G,(%s)' % (10.0, '@1001'))
         temp_values = self.v34980A.query_ascii_values(':MEASure:SCALar:RESistance? (%s)' % ('@1001'))
         resistance = temp_values[0]
         print("From instrument")
