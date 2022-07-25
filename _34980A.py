@@ -14,32 +14,47 @@ class _34980A:
         """Sets the sourcemeter to remote mode, thereby enabling 4-wire measurements"""
         self.v34980A.write('SENSE:REMOTE ON')
 
+    def set_channel_delay(self, time=0.002):
+        self.v34980A.write(':ROUTe:CHANnel:DELay %G,(%s)' % (time, '@1001'))
+
     # Triggers the internal DMM to scan one channel (channel 4 in slot 3), and then transfers the reading to reading memory and the instrument's output buffer.
     # MEAS:VOLT:DC? (@3004)
-    def get_voltage(self):
+    def get_voltage(self, range=100.0, res=6.5, npl_cycles=10.0, offset=1):
         # Configure the range, resolution and channel for voltage measurement
-        self.v34980A.write(':CONFigure:SCALar:VOLTage:DC %G,%G,(%s)' % (100.0, 6.5, '@1001'))
+        self.v34980A.write(':CONFigure:SCALar:VOLTage:DC %G,%G,(%s)' % (range, res, '@1001'))
         # Configure number of NPL cycles
-        self.v34980A.write(':SENSe:VOLTage:DC:NPLCycles %G,(%s)' % (10.0, '@1001'))
+        self.v34980A.write(':SENSe:VOLTage:DC:NPLCycles %G,(%s)' % (npl_cycles, '@1001'))
         # Sets offset compensation
-        self.v34980A.write(':SENSe:VOLTage:OCOMpensated %d,(%s)' % (1, '@1001'))
+        self.v34980A.write(':SENSe:VOLTage:OCOMpensated %d,(%s)' % (offset, '@1001'))
+
+        # Take a voltage measurement
         temp_values = self.v34980A.query_ascii_values(':MEASure:SCALar:VOLTage:DC? (%s)' % ('@1001'))  # channel 1 in slot 1
         dcVoltage = temp_values[0]
         return dcVoltage
 
-    def get_current(self):
+    def get_current(self, range=100.0, res=6.5, npl_cycles=10.0, offset=1):
+        # Configure the range, resolution and channel for voltage measurement
+        self.v34980A.write(':CONFigure:SCALar:CURRent:DC %G,%G,(%s)' % (range, res, '@1001'))
+        # Configure number of NPL cycles
+        self.v34980A.write(':SENSe:CURRent:DC:NPLCycles %G,(%s)' % (npl_cycles, '@1001'))
+        # Sets offset compensation
+        self.v34980A.write(':SENSe:CURRent:OCOMpensated %d,(%s)' % (offset, '@1001'))
+
+        # Take a current measurement
         temp_values = self.v34980A.query_ascii_values(':MEASure:SCALar:CURRent:DC?')
         # temp_values = self.v34980A.query_ascii_values(':MEASure:SCALar:CURRent:DC? (%s)' % ('@1001'))
         dcCurrent = temp_values[0]
         return dcCurrent
 
-    def get_resistance(self):
+    def get_resistance(self, range=100.0, res=6.5, npl_cycles=10.0, offset=1):
         # Configure the range, resolution and channel for resistance measurement
-        self.v34980A.write(':CONFigure:SCALar:RESistance %G,%G,(%s)' % (100.0, 6.5, '@1001'))
+        self.v34980A.write(':CONFigure:SCALar:RESistance %G,%G,(%s)' % (range, res, '@1001'))
         # Configure number of NPL cycles
-        self.v34980A.write(':SENSe:RESistance:NPLCycles %G,(%s)' % (10.0, '@1001'))
+        self.v34980A.write(':SENSe:RESistance:NPLCycles %G,(%s)' % (npl_cycles, '@1001'))
         # Sets offset compensation
-        self.v34980A.write(':SENSe:RESistance:OCOMpensated %d,(%s)' % (1, '@1001'))
+        self.v34980A.write(':SENSe:RESistance:OCOMpensated %d,(%s)' % (offset, '@1001'))
+
+        # Take a resistance measurement
         temp_values = self.v34980A.query_ascii_values(':MEASure:SCALar:RESistance? (%s)' % ('@1001'))
         resistance = temp_values[0]
         print("From instrument")
@@ -54,6 +69,7 @@ class _34980A:
 inst = _34980A()
 inst.set_range()
 inst.set_four_wire()
+inst.set_channel_delay()
 voltage = inst.get_voltage()
 print("Voltage : ", voltage)
 print("=====================================")
