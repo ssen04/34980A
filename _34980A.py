@@ -1,17 +1,18 @@
+import datetime
+import pandas as pd
 import pyvisa as visa
-import time
-
+import matplotlib.pyplot as plt
 
 class _34980A:
     def __init__(self):
         self.rm = visa.ResourceManager()
-        self.v34980A = self.rm.open_resource('TCPIP0::172.30.29.14::inst0::INSTR')
+        self.v34980A = self.rm.open_resource('TCPIP0::172.30.30.31::inst0::INSTR')
 
     def set_range(self, val=100.0):
         self.v34980A.write(':SENSe:VOLTage:DC:RANGe %G' % (val))
 
     def set_four_wire(self):
-        """Sets the system to remote mode, thereby enabling 4-wire measurements"""
+        # Sets the system to remote mode, thereby enabling 4-wire measurements
         self.v34980A.write('SENSE:REMOTE ON')
 
     def set_channel_delay(self, time=0.002):
@@ -59,6 +60,14 @@ class _34980A:
         resistance = temp_values[0]
         return resistance
 
+    def log(self, data_arr):
+        try:
+            with open("data.csv", "a") as f:
+                line = f"Date and Time: {datetime.datetime.now()}, {data_arr[2]}\n"
+                f.write(line)
+        except Exception as e:
+            print(e)
+
     def close(self):
         self.v34980A.close()
         self.rm.close()
@@ -71,14 +80,35 @@ inst.set_channel_delay()
 for i in range(1, 32):
     channel_string = '@' + str(1000 + i)
     print("Channel ", channel_string)
-    voltage = inst.get_voltage(channel=channel_string)
+    voltage = inst.get_voltage(channel=channel_string)  # get voltage
     print("Voltage : ", voltage)
     print("=====================================")
-    current = inst.get_current(channel=channel_string)
+    current = inst.get_current(channel=channel_string)  # get current
     print("Current : ", current)
     print("=====================================")
     resistance = inst.get_resistance(channel=channel_string)
-    print("Resistance : ", resistance, "\n")
-
+    print("Resistance : ", resistance, "\n")  # get resistance
+    inst.log([voltage, current, resistance])
 
 inst.close()
+
+data = pd.read_csv(r'data.csv', usecols=[0, 1], names=['colA', 'colB'], header=None)
+
+y = data['colB'].tolist()
+print(y)
+x = list(range(1, (len(data['colA'].tolist()) + 1)))
+print(x)
+
+# plotting the points
+plt.plot(x[0:82], y[0:82])  # initial pressure -> blue
+plt.plot(x[81:174], y[81: 174], 'r')  # increased pressure -> red
+plt.plot(x[173:236], y[173: 236], 'g')  # decreased pressure -> green
+plt.plot(x[235:(len(data['colA'].tolist()) + 1)], y[235: (len(data['colA'].tolist()) + 1)])  # increased pressure -> orange
+
+plt.xlabel('x - axis')
+plt.ylabel('Resistance')
+
+plt.title('Resistance')
+
+# function to show the plot
+plt.show()
